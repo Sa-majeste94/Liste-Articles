@@ -88,7 +88,9 @@ label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
 <div class="ov" id="ov" hidden><div class="panel" id="panel"></div></div>
 <input type="file" id="file" accept=".json,application/json" hidden>
 <script>
-const SECTIONS=["Présentation", "Pré-dot (premier vin)", "Habillement de la fiancée", "Dot côté paternel", "Habillement des tantes paternelles", "Dot côté maternel", "Habillement du frère de la fiancée", "Boissons de la dot", "Espèces dot (juges & familles)"], CATS=["Boissons", "Tissus & couture", "Vêtements & accessoires", "Bijoux & montres", "Outils & ustensiles", "Maison & éclairage", "Alimentaire", "Espèces & coutumes"], TYPES=["Article","Espèces"];
+const SECTIONS=["Présentation", "Pré-dot (premier vin)", "Habillement de la fiancée", "Dot côté paternel", "Habillement des tantes paternelles", "Dot côté maternel", "Habillement du frère de la fiancée", "Boissons de la dot", "Espèces dot (juges & familles)"], CATS=["Casiers Ngok", "Casiers Castel", "Casiers Jus", "Casiers 33", "Casiers Beaufort", "Casiers Primus", "Casiers Chill", "Cartons", "Mélange", "Vins & spiritueux", "Tissus & couture", "Vêtements & accessoires", "Bijoux & montres", "Outils & ustensiles", "Maison & éclairage", "Alimentaire", "Espèces & coutumes"], TYPES=["Article","Espèces"];
+const secList=()=>SECTIONS.concat([...new Set(items.map(i=>i.section))].filter(s=>s&&!SECTIONS.includes(s)));
+const catList=()=>CATS.concat([...new Set(items.map(i=>i.cat))].filter(c=>c&&!CATS.includes(c)));
 const INIT=[];
 const KEY="dot_suivi_v1";
 const fmt=n=>Math.round(n||0).toLocaleString("fr-FR");
@@ -119,7 +121,7 @@ function renderSummary(){
 function amountHTML(i){
  if(i.bought&&i.real!=null&&i.real!==i.planned)return fmt(i.real)+(i.planned!=null?"<s>prévu "+fmt(i.planned)+"</s>":"");
  if(i.planned==null)return '<span class="tbd">à chiffrer</span>';
- return fmt(i.planned);
+ return fmt(i.planned)+(i.unit!=null&&i.qty?"<s>"+esc(i.qty)+" × "+fmt(i.unit)+"</s>":"");
 }
 function renderList(){
  const q=st.q.trim().toLowerCase();
@@ -157,7 +159,7 @@ function renderBilan(){
  const kv=(a,v)=>'<div class="kv"><span>'+a+'</span><b>'+v+'</b></div>';
  let h='<div class="card"><h2>Résumé</h2>'+kv("Budget prévu",fmt(b))+kv("Remises obtenues",fmt(dc))+kv("Déjà dépensé (net)",fmt(s))+kv("Reste à payer",fmt(r))+kv("Projection finale",fmt(s+r))+
   kv("Écart vs budget prévu",(s+r-b>0?"+":"")+fmt(s+r-b))+kv("Articles sans montant prévu",nop)+'</div>';
- h+=block("Par section",SECTIONS,"section")+block("Par catégorie",CATS,"cat")+block("Par type",TYPES,"type");
+ h+=block("Par section",secList(),"section")+block("Par catégorie",catList(),"cat")+block("Par type",TYPES,"type");
  if(dc)h+='<div class="note">Les totaux par section, catégorie et type sont avant remises vendeur.</div>';
  if(!storageOK)h+='<div class="note">⚠ Le navigateur refuse d\'enregistrer : vos données ne seront pas conservées. Utilisez Sauvegarde (menu ⋮).</div>';
  $("vBilan").innerHTML=h;
@@ -196,13 +198,13 @@ function openDisc(id){
   save();closeSheet();render();
  };
 }
-function render(){renderSummary();renderVen();renderList();if(st.view==="bilan")renderBilan();if(st.view==="rem")renderRem()}
+function render(){renderSummary();renderSec();renderVen();renderList();if(st.view==="bilan")renderBilan();if(st.view==="rem")renderRem()}
 function setView(v){st.view=v;$("vList").hidden=v!=="list";$("vBilan").hidden=v!=="bilan";$("vRem").hidden=v!=="rem";
  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
  $("addBtn").style.display=v==="bilan"?"none":"";if(v==="bilan")renderBilan();if(v==="rem")renderRem();window.scrollTo(0,0)}
 document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setView(b.dataset.v));
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{st.flt=b.dataset.f;document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));renderList()});
-$("secSel").innerHTML='<option value="">Toutes les sections</option>'+SECTIONS.map(s=>'<option>'+esc(s)+'</option>').join("");
+function renderSec(){const l=secList();if(st.sec&&!l.includes(st.sec))st.sec="";$("secSel").innerHTML='<option value="">Toutes les sections</option>'+l.map(s=>'<option'+(s===st.sec?' selected':'')+'>'+esc(s)+'</option>').join("")}
 $("secSel").onchange=e=>{st.sec=e.target.value;renderList()};
 $("q").oninput=e=>{st.q=e.target.value;renderList()};
 $("list").onclick=e=>{
@@ -220,19 +222,22 @@ function openEdit(id){
  openSheet('<h3>'+(id?"Modifier l'article":"Nouvel article")+'</h3>'+
  '<label>Article</label><input id="fN" value="'+esc(i.name)+'">'+
  '<div class="two"><div><label>Quantité</label><input id="fQ" inputmode="decimal" value="'+esc(i.qty)+'"></div><div><label>Type</label><select id="fT">'+opts(TYPES,i.type)+'</select></div></div>'+
- '<label>Section</label><select id="fS">'+opts(SECTIONS,i.section)+'</select>'+
- '<label>Catégorie</label><select id="fC">'+opts(CATS,i.cat)+'</select>'+
+ '<label>Section</label><select id="fS">'+opts(secList(),i.section)+'</select>'+
+ '<label>Catégorie</label><select id="fC">'+opts(catList(),i.cat)+'</select>'+
  '<label>Vendeur (pour un achat groupé avec remise)</label><input id="fV" list="vl2" value="'+esc(i.vendor)+'"><datalist id="vl2">'+vendors().map(v=>'<option value="'+esc(v)+'">').join("")+'</datalist>'+
+ '<label>Prix unitaire (facultatif) : si rempli, montant prévu = quantité × prix unitaire</label><input id="fU" inputmode="decimal" value="'+esc(i.unit)+'">'+
  '<div class="two"><div><label>Montant prévu</label><input id="fP" inputmode="decimal" value="'+esc(i.planned)+'"></div><div><label>Montant réel payé</label><input id="fR" inputmode="decimal" placeholder="= prévu" value="'+esc(i.real)+'"></div></div>'+
  '<label><input type="checkbox" id="fB" style="width:auto;margin-right:8px"'+(i.bought?' checked':'')+'>Déjà acheté</label>'+
  '<label>Notes</label><input id="fNo" value="'+esc(i.notes)+'">'+
  '<div class="btns">'+(id?'<button class="btn d" id="fDel">Supprimer</button>':'')+'<button class="btn" id="fCan">Annuler</button><button class="btn p" id="fOk">Enregistrer</button></div>');
  $("fCan").onclick=closeSheet;
+ const sync=()=>{const q=num($("fQ").value),u=num($("fU").value),auto=q!=null&&u!=null;$("fP").readOnly=auto;if(auto)$("fP").value=Math.round(q*u*100)/100;$("fP").style.opacity=auto?.6:1};
+ ["fQ","fU"].forEach(k=>$(k).addEventListener("input",sync));sync();
  if(id)$("fDel").onclick=()=>{if(confirm("Supprimer cet article ?")){items=items.filter(x=>x.id!==id);save();closeSheet();render()}};
  $("fOk").onclick=()=>{
   const name=$("fN").value.trim();if(!name){$("fN").focus();return}
   const o={id:id||(items.reduce((m,x)=>Math.max(m,x.id),0)+1),name,qty:num($("fQ").value),type:$("fT").value,section:$("fS").value,cat:$("fC").value,
-   planned:num($("fP").value),real:num($("fR").value),bought:$("fB").checked,notes:$("fNo").value.trim(),vendor:$("fV").value.trim()};
+   planned:num($("fP").value),unit:num($("fU").value),real:num($("fR").value),bought:$("fB").checked,notes:$("fNo").value.trim(),vendor:$("fV").value.trim()};
   if(id)items[items.findIndex(x=>x.id===id)]=o;else items.push(o);
   save();closeSheet();render();
  };
