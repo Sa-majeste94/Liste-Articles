@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1F4E5F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Suivi achats">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Suivi des achats</title>
+<style>
+:root{--bg:#f4f6f7;--card:#fff;--tx:#1d2528;--mut:#6b777c;--pri:#1F4E5F;--ok:#2e7d32;--okbg:#e4f2e5;--warn:#c76a00;--line:#e1e6e8}
+@media(prefers-color-scheme:dark){:root{--bg:#12181a;--card:#1b2427;--tx:#e8eef0;--mut:#93a2a8;--pri:#5fb3cc;--ok:#7fd183;--okbg:#1f3322;--warn:#ffb25c;--line:#2b373b}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:90px}
+header{position:sticky;top:0;z-index:5;background:var(--pri);color:#fff;padding:env(safe-area-inset-top) 14px 0}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 0 4px}
+h1{font-size:18px;margin:0}
+#menuBtn{background:none;border:0;color:#fff;font-size:26px;padding:0 8px;line-height:1}
+.sumrow{display:flex;gap:8px;justify-content:space-between}
+.sumrow div{flex:1}.sumrow small{display:block;opacity:.8;font-size:11px}.sumrow b{font-size:17px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:6px;margin:8px 0 4px;overflow:hidden}
+.bar i{display:block;height:100%;background:#8fe39a;width:0;transition:width .3s}
+.sumfoot{display:flex;justify-content:space-between;font-size:12px;opacity:.9;padding-bottom:6px}
+.tabs{display:flex;gap:4px}
+.tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;color:#fff;opacity:.7;padding:10px 0;font-size:15px;font-weight:600}
+.tabs button.on{opacity:1;border-color:#fff}
+main{padding:10px 12px;max-width:720px;margin:auto}
+.tools{display:grid;gap:8px;margin-bottom:6px}
+input,select,textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx)}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{flex:1;border:0;background:none;color:var(--tx);padding:10px 0;font-size:14px}
+.seg button.on{background:var(--pri);color:#fff}
+.grp{display:flex;justify-content:space-between;align-items:baseline;margin:16px 4px 6px;font-weight:700;font-size:14px;color:var(--pri)}
+.grp small{font-weight:400;color:var(--mut)}
+.it{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}
+.it.done{background:var(--okbg)}.it.done .nm{text-decoration:line-through;color:var(--mut)}
+.chk{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--mut);background:none;color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
+.it.done .chk{background:var(--ok);border-color:var(--ok)}
+.mid{flex:1;min-width:0}.nm{font-weight:600;overflow-wrap:anywhere}.mt{font-size:12px;color:var(--mut)}
+.am{text-align:right;font-weight:700;white-space:nowrap}.am s{display:block;font-weight:400;font-size:12px;color:var(--mut)}
+.tbd{color:var(--warn);font-size:12px;font-weight:600}
+.empty{text-align:center;color:var(--mut);padding:30px}
+.fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;border:0;background:var(--pri);color:#fff;font-size:32px;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--pri)}
+.kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line)}.kv:last-child{border:0}
+.row{padding:8px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
+.row .l{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.row .s{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:2px}
+.mini{height:6px;background:var(--line);border-radius:4px;margin-top:5px;overflow:hidden}.mini i{display:block;height:100%;background:var(--ok)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.ov[hidden]{display:none}
+.panel{background:var(--bg);width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+.panel h3{margin:0 0 12px}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:16px}
+.btn{flex:1;padding:13px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-size:16px;font-weight:600}
+.btn.p{background:var(--pri);color:#fff;border-color:var(--pri)}.btn.d{color:#c62828}
+.menu .btn{display:block;width:100%;margin-bottom:8px;text-align:left}
+.note{font-size:12px;color:var(--mut);margin-top:10px}
+</style></head><body>
+<header>
+ <div class="top"><h1>Suivi des achats</h1><button id="menuBtn" aria-label="Menu">⋮</button></div>
+ <div class="sumrow">
+  <div><small>Dépensé</small><b id="sSpent"></b></div>
+  <div><small>Reste à payer</small><b id="sRest"></b></div>
+  <div><small>Budget prévu</small><b id="sBudget"></b></div>
+ </div>
+ <div class="bar"><i id="sBar"></i></div>
+ <div class="sumfoot"><span id="sCount"></span><span id="sPct"></span></div>
+ <nav class="tabs"><button data-v="list" class="on">Articles</button><button data-v="rem">Remises</button><button data-v="bilan">Bilan</button></nav>
+</header>
+<main>
+ <section id="vList">
+  <div class="tools">
+   <input id="q" type="search" placeholder="Rechercher un article">
+   <select id="secSel"></select>
+   <select id="venSel" hidden></select>
+   <div class="seg"><button data-f="all" class="on">Tous</button><button data-f="todo">À acheter</button><button data-f="done">Achetés</button></div>
+  </div>
+  <div id="list"></div>
+ </section>
+ <section id="vRem" hidden></section>
+ <section id="vBilan" hidden></section>
+</main>
+<button class="fab" id="addBtn" aria-label="Ajouter un article">+</button>
+<div class="ov" id="ov" hidden><div class="panel" id="panel"></div></div>
+<input type="file" id="file" accept=".json,application/json" hidden>
+<script>
+const SECTIONS=["Présentation", "Pré-dot (premier vin)", "Habillement de la fiancée", "Dot côté paternel", "Habillement des tantes paternelles", "Dot côté maternel", "Habillement du frère de la fiancée", "Boissons de la dot", "Espèces dot (juges & familles)"], CATS=["Boissons", "Tissus & couture", "Vêtements & accessoires", "Bijoux & montres", "Outils & ustensiles", "Maison & éclairage", "Alimentaire", "Espèces & coutumes"], TYPES=["Article","Espèces"];
+const INIT=[];
+const KEY="dot_suivi_v1";
+const fmt=n=>Math.round(n||0).toLocaleString("fr-FR");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=id=>document.getElementById(id);
+function fresh(){return INIT.map((r,i)=>({id:i+1,section:r[0],cat:r[1],qty:r[2],name:r[3],type:r[4],planned:r[5],bought:false,real:null,notes:r[6]||"",vendor:""}))}
+let items,discounts=[];
+try{const s=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(s))items=s;else if(s&&Array.isArray(s.items)){items=s.items;discounts=Array.isArray(s.discounts)?s.discounts:[]}}catch(e){}
+if(!Array.isArray(items))items=fresh();
+let storageOK=true;
+function save(){try{localStorage.setItem(KEY,JSON.stringify({items,discounts}))}catch(e){storageOK=false}}
+const vk=v=>String(v==null?"":v).trim().toLowerCase();
+const totDisc=()=>discounts.reduce((a,d)=>a+(d.amount||0),0);
+function vendors(){const m={};items.forEach(i=>{if(vk(i.vendor))m[vk(i.vendor)]=String(i.vendor).trim()});discounts.forEach(d=>{if(vk(d.vendor)&&!m[vk(d.vendor)])m[vk(d.vendor)]=String(d.vendor).trim()});return Object.values(m).sort((a,b)=>a.localeCompare(b,"fr"))}
+const spent=i=>i.bought?(i.real!=null?i.real:(i.planned||0)):0;
+const rest=i=>i.bought?0:(i.planned||0);
+const st={view:"list",q:"",sec:"",flt:"all",ven:""};
+
+function renderSummary(){
+ let b=0,s=0,r=0,d=0;
+ items.forEach(i=>{b+=i.planned||0;s+=spent(i);r+=rest(i);if(i.bought)d++});
+ s-=totDisc();$("sSpent").textContent=fmt(s);$("sRest").textContent=fmt(r);$("sBudget").textContent=fmt(b);
+ const p=s+r?s/(s+r):0;
+ $("sBar").style.width=(p*100)+"%";
+ $("sCount").textContent=d+" / "+items.length+" articles achetés";
+ $("sPct").textContent=Math.round(p*100)+" % du budget";
+}
+function amountHTML(i){
+ if(i.bought&&i.real!=null&&i.real!==i.planned)return fmt(i.real)+(i.planned!=null?"<s>prévu "+fmt(i.planned)+"</s>":"");
+ if(i.planned==null)return '<span class="tbd">à chiffrer</span>';
+ return fmt(i.planned);
+}
+function renderList(){
+ const q=st.q.trim().toLowerCase();
+ const f=items.filter(i=>(!st.sec||i.section===st.sec)&&(!st.ven||vk(i.vendor)===vk(st.ven))&&(st.flt==="all"||(st.flt==="done")===i.bought)&&(!q||(i.name+" "+i.cat+" "+i.notes).toLowerCase().includes(q)));
+ if(!f.length){$("list").innerHTML=items.length?'<div class="empty">Aucun article</div>':'<div class="empty">La liste est vide.<br>Touchez + pour ajouter un article,<br>ou ouvrez le menu ⋮ puis « Restaurer une sauvegarde ».</div>';return}
+ let h="";
+ const secs=SECTIONS.concat([...new Set(f.map(i=>i.section))].filter(s=>!SECTIONS.includes(s)));
+ secs.forEach(s=>{
+  const g=f.filter(i=>i.section===s);if(!g.length)return;
+  const all=items.filter(i=>i.section===s);
+  h+='<div class="grp"><span>'+esc(s)+'</span><small>'+all.filter(i=>i.bought).length+'/'+all.length+' · '+fmt(all.reduce((a,i)=>a+(i.planned||0),0))+'</small></div>';
+  g.forEach(i=>{
+   h+='<div class="it'+(i.bought?' done':'')+'" data-id="'+i.id+'"><button class="chk" data-t="'+i.id+'" aria-label="Acheté">'+(i.bought?'✓':'')+'</button>'+
+   '<div class="mid"><div class="nm">'+(i.qty?esc(i.qty)+' × ':'')+esc(i.name)+'</div><div class="mt">'+esc(i.cat)+' · '+esc(i.type)+(i.vendor?' · '+esc(i.vendor):'')+(i.notes?' · '+esc(i.notes):'')+'</div></div>'+
+   '<div class="am">'+amountHTML(i)+'</div></div>';
+  });
+ });
+ $("list").innerHTML=h;
+}
+function block(title,labels,key){
+ let h='<div class="card"><h2>'+title+'</h2>';
+ labels.forEach(l=>{
+  const g=items.filter(i=>i[key]===l);if(!g.length)return;
+  const p=g.reduce((a,i)=>a+(i.planned||0),0),s=g.reduce((a,i)=>a+spent(i),0),r=g.reduce((a,i)=>a+rest(i),0);
+  const pc=s+r?s/(s+r):0;
+  h+='<div class="row"><div class="l"><span>'+esc(l)+'</span><span>'+fmt(p)+'</span></div>'+
+  '<div class="s"><span>Dépensé '+fmt(s)+' · Reste '+fmt(r)+'</span><span>'+g.filter(i=>i.bought).length+'/'+g.length+'</span></div>'+
+  '<div class="mini"><i style="width:'+(pc*100)+'%"></i></div></div>';
+ });
+ return h+'</div>';
+}
+function renderBilan(){
+ let b=0,s=0,r=0,nop=0;
+ items.forEach(i=>{b+=i.planned||0;s+=spent(i);r+=rest(i);if(i.planned==null&&!(i.bought&&i.real!=null))nop++});const dc=totDisc();s-=dc;
+ const kv=(a,v)=>'<div class="kv"><span>'+a+'</span><b>'+v+'</b></div>';
+ let h='<div class="card"><h2>Résumé</h2>'+kv("Budget prévu",fmt(b))+kv("Remises obtenues",fmt(dc))+kv("Déjà dépensé (net)",fmt(s))+kv("Reste à payer",fmt(r))+kv("Projection finale",fmt(s+r))+
+  kv("Écart vs budget prévu",(s+r-b>0?"+":"")+fmt(s+r-b))+kv("Articles sans montant prévu",nop)+'</div>';
+ h+=block("Par section",SECTIONS,"section")+block("Par catégorie",CATS,"cat")+block("Par type",TYPES,"type");
+ if(dc)h+='<div class="note">Les totaux par section, catégorie et type sont avant remises vendeur.</div>';
+ if(!storageOK)h+='<div class="note">⚠ Le navigateur refuse d\'enregistrer : vos données ne seront pas conservées. Utilisez Sauvegarde (menu ⋮).</div>';
+ $("vBilan").innerHTML=h;
+}
+function renderVen(){const v=vendors();if(st.ven&&!v.some(x=>vk(x)===vk(st.ven)))st.ven="";
+ $("venSel").innerHTML='<option value="">Tous les vendeurs</option>'+v.map(x=>'<option'+(vk(x)===vk(st.ven)?' selected':'')+'>'+esc(x)+'</option>').join("");$("venSel").hidden=!v.length}
+$("venSel").onchange=e=>{st.ven=e.target.value;renderList()};
+function renderRem(){
+ const kv=(a,v)=>'<div class="kv"><span>'+a+'</span><b>'+v+'</b></div>';
+ let h='<div class="card"><h2>Remises obtenues</h2>'+kv("Total des remises",fmt(totDisc()))+'</div>';
+ if(!discounts.length)h+='<div class="empty">Aucune remise enregistrée.<br>Touchez + pour en ajouter une.</div>';
+ discounts.forEach(d=>{
+  const g=items.filter(i=>vk(i.vendor)===vk(d.vendor)),gross=g.reduce((a,i)=>a+spent(i),0),done=g.filter(i=>i.bought).length;
+  h+='<div class="card" data-d="'+d.id+'"><h2>'+esc(d.vendor)+'</h2>'+
+  kv("Articles achetés ("+done+"/"+g.length+")",fmt(gross))+kv("Remise","− "+fmt(d.amount))+kv("Net à payer",fmt(gross-d.amount))+
+  (d.note?'<div class="note">'+esc(d.note)+'</div>':'')+
+  (g.length?'':'<div class="note">⚠ Aucun article n\'a ce vendeur : renseignez-le dans la fiche des articles.</div>')+'</div>';
+ });
+ $("vRem").innerHTML=h;
+}
+$("vRem").onclick=e=>{const c=e.target.closest("[data-d]");if(c)openDisc(+c.dataset.d)};
+function openDisc(id){
+ const d=id?discounts.find(x=>x.id===id):{id:0,vendor:st.ven||"",amount:null,note:""};
+ openSheet('<h3>'+(id?"Modifier la remise":"Nouvelle remise")+'</h3>'+
+ '<label>Vendeur</label><input id="dV" list="vl" value="'+esc(d.vendor)+'"><datalist id="vl">'+vendors().map(v=>'<option value="'+esc(v)+'">').join("")+'</datalist>'+
+ '<label>Montant total de la remise accordée</label><input id="dA" inputmode="decimal" value="'+esc(d.amount)+'">'+
+ '<label>Note</label><input id="dN" value="'+esc(d.note)+'">'+
+ '<div class="btns">'+(id?'<button class="btn d" id="dDel">Supprimer</button>':'')+'<button class="btn" id="dCan">Annuler</button><button class="btn p" id="dOk">Enregistrer</button></div>');
+ $("dCan").onclick=closeSheet;
+ if(id)$("dDel").onclick=()=>{if(confirm("Supprimer cette remise ?")){discounts=discounts.filter(x=>x.id!==id);save();closeSheet();render()}};
+ $("dOk").onclick=()=>{
+  const v=$("dV").value.trim(),a=num($("dA").value);
+  if(!v){$("dV").focus();return}if(a==null){$("dA").focus();return}
+  const o={id:id||(discounts.reduce((m,x)=>Math.max(m,x.id),0)+1),vendor:v,amount:Math.abs(a),note:$("dN").value.trim()};
+  if(id)discounts[discounts.findIndex(x=>x.id===id)]=o;else discounts.push(o);
+  save();closeSheet();render();
+ };
+}
+function render(){renderSummary();renderVen();renderList();if(st.view==="bilan")renderBilan();if(st.view==="rem")renderRem()}
+function setView(v){st.view=v;$("vList").hidden=v!=="list";$("vBilan").hidden=v!=="bilan";$("vRem").hidden=v!=="rem";
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+ $("addBtn").style.display=v==="bilan"?"none":"";if(v==="bilan")renderBilan();if(v==="rem")renderRem();window.scrollTo(0,0)}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setView(b.dataset.v));
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{st.flt=b.dataset.f;document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));renderList()});
+$("secSel").innerHTML='<option value="">Toutes les sections</option>'+SECTIONS.map(s=>'<option>'+esc(s)+'</option>').join("");
+$("secSel").onchange=e=>{st.sec=e.target.value;renderList()};
+$("q").oninput=e=>{st.q=e.target.value;renderList()};
+$("list").onclick=e=>{
+ const t=e.target.closest("[data-t]");
+ if(t){const i=items.find(x=>x.id==t.dataset.t);i.bought=!i.bought;save();render();return}
+ const it=e.target.closest(".it");if(it)openEdit(+it.dataset.id);
+};
+function openSheet(html){$("panel").innerHTML=html;$("ov").hidden=false}
+function closeSheet(){$("ov").hidden=true}
+$("ov").onclick=e=>{if(e.target===$("ov"))closeSheet()};
+const opts=(a,v)=>a.map(x=>'<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>').join("");
+const num=v=>{v=String(v).replace(/\s/g,"").replace(",",".");return v===""||isNaN(+v)?null:+v};
+function openEdit(id){
+ const i=id?items.find(x=>x.id===id):{id:0,section:st.sec||SECTIONS[0],cat:CATS[0],qty:1,name:"",type:"Article",planned:null,bought:false,real:null,notes:"",vendor:st.ven||""};
+ openSheet('<h3>'+(id?"Modifier l'article":"Nouvel article")+'</h3>'+
+ '<label>Article</label><input id="fN" value="'+esc(i.name)+'">'+
+ '<div class="two"><div><label>Quantité</label><input id="fQ" inputmode="decimal" value="'+esc(i.qty)+'"></div><div><label>Type</label><select id="fT">'+opts(TYPES,i.type)+'</select></div></div>'+
+ '<label>Section</label><select id="fS">'+opts(SECTIONS,i.section)+'</select>'+
+ '<label>Catégorie</label><select id="fC">'+opts(CATS,i.cat)+'</select>'+
+ '<label>Vendeur (pour un achat groupé avec remise)</label><input id="fV" list="vl2" value="'+esc(i.vendor)+'"><datalist id="vl2">'+vendors().map(v=>'<option value="'+esc(v)+'">').join("")+'</datalist>'+
+ '<div class="two"><div><label>Montant prévu</label><input id="fP" inputmode="decimal" value="'+esc(i.planned)+'"></div><div><label>Montant réel payé</label><input id="fR" inputmode="decimal" placeholder="= prévu" value="'+esc(i.real)+'"></div></div>'+
+ '<label><input type="checkbox" id="fB" style="width:auto;margin-right:8px"'+(i.bought?' checked':'')+'>Déjà acheté</label>'+
+ '<label>Notes</label><input id="fNo" value="'+esc(i.notes)+'">'+
+ '<div class="btns">'+(id?'<button class="btn d" id="fDel">Supprimer</button>':'')+'<button class="btn" id="fCan">Annuler</button><button class="btn p" id="fOk">Enregistrer</button></div>');
+ $("fCan").onclick=closeSheet;
+ if(id)$("fDel").onclick=()=>{if(confirm("Supprimer cet article ?")){items=items.filter(x=>x.id!==id);save();closeSheet();render()}};
+ $("fOk").onclick=()=>{
+  const name=$("fN").value.trim();if(!name){$("fN").focus();return}
+  const o={id:id||(items.reduce((m,x)=>Math.max(m,x.id),0)+1),name,qty:num($("fQ").value),type:$("fT").value,section:$("fS").value,cat:$("fC").value,
+   planned:num($("fP").value),real:num($("fR").value),bought:$("fB").checked,notes:$("fNo").value.trim(),vendor:$("fV").value.trim()};
+  if(id)items[items.findIndex(x=>x.id===id)]=o;else items.push(o);
+  save();closeSheet();render();
+ };
+}
+$("addBtn").onclick=()=>st.view==="rem"?openDisc(0):openEdit(0);
+function download(name,text,mime){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:mime}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+$("menuBtn").onclick=()=>openSheet('<h3>Menu</h3><div class="menu">'+
+ '<button class="btn" id="mJ">⬇ Sauvegarder mes données (fichier)</button>'+
+ '<button class="btn" id="mI">⬆ Restaurer une sauvegarde</button>'+
+ '<button class="btn" id="mC">📄 Exporter en CSV (Excel)</button>'+
+ '<button class="btn d" id="mR">↺ Tout réinitialiser</button>'+
+ '<button class="btn" id="mX">Fermer</button></div>'+
+ '<div class="note">Les données restent dans ce navigateur. Si vous effacez les données du navigateur, elles disparaissent : faites une sauvegarde de temps en temps.</div>');
+document.addEventListener("click",e=>{
+ const id=e.target.id;
+ if(id==="mX")closeSheet();
+ if(id==="mJ")download("dot-sauvegarde.json",JSON.stringify({items,discounts}),"application/json");
+ if(id==="mI")$("file").click();
+ if(id==="mC"){
+  const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const L=[["Section","Catégorie","Qté","Article","Type","Montant prévu","Acheté","Montant réel","Vendeur","Notes"].map(q).join(";")];
+  items.forEach(i=>L.push([i.section,i.cat,i.qty,i.name,i.type,i.planned,i.bought?"Oui":"Non",i.real,i.vendor,i.notes].map(q).join(";")));
+  download("dot-articles.csv","﻿"+L.join("\r\n"),"text/csv");
+ }
+ if(id==="mR"&&confirm("Tout effacer ? Les articles, achats et remises seront supprimés.")){items=fresh();discounts=[];save();closeSheet();render()}
+});
+$("file").onchange=e=>{
+ const f=e.target.files[0];if(!f)return;
+ const r=new FileReader();
+ r.onload=()=>{try{const p=JSON.parse(r.result);const a=Array.isArray(p)?p:p.items;const dd=Array.isArray(p)?[]:(Array.isArray(p.discounts)?p.discounts:[]);
+  if(!Array.isArray(a)||!a.every(x=>x&&typeof x.name==="string"&&"section" in x))throw 0;
+  if(confirm("Remplacer les données actuelles par cette sauvegarde ("+a.length+" articles) ?")){items=a;discounts=dd;save();closeSheet();render()}
+ }catch(_){alert("Fichier de sauvegarde invalide.")}};
+ r.readAsText(f);e.target.value="";
+};
+render();
+if("serviceWorker" in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script></body></html>
